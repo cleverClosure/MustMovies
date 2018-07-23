@@ -1,0 +1,6 @@
+framework module Pods_MustMovies {
+  umbrella header "Pods-MustMovies-umbrella.h"
+
+  export *
+  module * { export * }
+}
