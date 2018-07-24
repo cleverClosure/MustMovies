@@ -42,18 +42,11 @@ class RecommendationViewController: UIViewController {
         return stack
     }()
     
-    lazy fileprivate var menuStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.isHidden = true
-        for status in WatchedStatus.allValues {
-            let label = UILabel()
-            label.font = UIFont.headingFont()
-            label.textColor = .gray
-            label.text = status.rawValue
-            stack.addArrangedSubview(label)
-        }
-        return stack
+    lazy fileprivate var menuStack: PosterMenu = {
+        let items = WatchedStatus.allValues.map {$0.rawValue}
+        let menu = PosterMenu(items: items)
+        menu.isHidden = true
+        return menu
     }()
     
     var cellSize: CGSize {
@@ -66,7 +59,7 @@ class RecommendationViewController: UIViewController {
         return UIEdgeInsets(top: 0, left: 25, bottom: 10, right: view.frame.width - cellSize.width - minimumLineSpacing)
     }
     
-    var minimumLineSpacing: CGFloat = 22
+    var minimumLineSpacing: CGFloat = LayoutConstants.leftEdgeOffset
     
     lazy var collectionViewLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -106,7 +99,6 @@ class RecommendationViewController: UIViewController {
    
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        
         collectionView.decelerationRate = UIScrollViewDecelerationRateFast
     }
     
@@ -118,12 +110,12 @@ class RecommendationViewController: UIViewController {
             make.centerY.equalToSuperview()
         }
         headingStack.snp.makeConstraints { (maker) in
-            maker.bottom.equalTo(collectionView.snp.top).offset(-10)
-            maker.leading.equalToSuperview().offset(22)
+            maker.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
+            maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
         }
         
         menuStack.snp.makeConstraints { (maker) in
-            maker.leading.equalToSuperview().offset(22)
+            maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
             maker.top.equalTo(headingStack)
         }
     }
@@ -160,8 +152,6 @@ extension RecommendationViewController: UIScrollViewDelegate {
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
-        
-        
         let layout = self.collectionViewLayout
         let cellWidthIncludingSpacing = layout.itemSize.width + layout.minimumLineSpacing
         var offset = targetContentOffset.pointee
@@ -170,8 +160,6 @@ extension RecommendationViewController: UIScrollViewDelegate {
         let roundedIndex = round(index)
         
         currentCellIndex = Int(roundedIndex)
-        print("#### \(currentCellIndex)")
-        
         
         offset = CGPoint(x: roundedIndex * cellWidthIncludingSpacing - scrollView.contentInset.left, y: -scrollView.contentInset.top)
         targetContentOffset.pointee = offset
@@ -231,8 +219,7 @@ extension RecommendationViewController {
                     changeY = view.center.y
                     diffY = view.center.y - cellCenter!.y
                 }
-                view.center = CGPoint(x:view.center.x,
-                                      y:changeY)
+                view.center = CGPoint(x:view.center.x, y:changeY)
                 
                 menuChange(diffY: diffY)
             }
@@ -242,7 +229,7 @@ extension RecommendationViewController {
             shouldRecognizeSimultaneously = true
             showHeading()
             headingStack.snp.updateConstraints { (make) in
-                make.bottom.equalTo(collectionView.snp.top).offset(-10)
+                make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
             }
             UIView.animate(withDuration: 0.6, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0, options: .curveEaseInOut, animations: { [unowned self] in
                 recognizer.view!.center = self.cellCenter ?? CGPoint.zero
@@ -257,36 +244,42 @@ extension RecommendationViewController {
     func menuChange(diffY: CGFloat) {
         let maxVal = collectionViewLayout.itemSize.height * 0.4
         let percentage = diffY / maxVal
-        if percentage >= 0.2 {
+        if percentage >= 0.3 {
             hideHeading()
         }
-        if percentage < 0.2 {
+        if percentage < 0.3 {
             showHeading()
         }
         switch percentage {
-        case 0...0.2:
+        case 0...0.4:
             headingStack.snp.updateConstraints { (make) in
-                make.bottom.equalTo(collectionView.snp.top).offset(-10 + (100 * percentage))
+                make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset + (100 * percentage))
             }
         default:
             var index = Int(round((percentage / (CGFloat(WatchedStatus.allValues.count) / CGFloat(10))))) - 1
             index = max(index, 0)
-            index = min(index, menuStack.arrangedSubviews.count)
-            chooseMovieStatus(index: index)
+            index = min(index, menuStack.items.count)
+            menuStack.chooseItem(at: index)
         }
     }
     
-    func chooseMovieStatus(index: Int) {
-        (menuStack.arrangedSubviews as! [UILabel]).forEach {
-            $0.textColor = .gray
-        }
-        (menuStack.arrangedSubviews[index] as! UILabel).textColor = .black
-    }
+
     
 }
 
 extension RecommendationViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return false
+    }
+    
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let panGestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer {
+            let translation = panGestureRecognizer.translation(in: self.view)
+            if fabs(translation.y) > fabs(translation.x) {
+                return true
+            }
+            return false
+        }
         return false
     }
 }

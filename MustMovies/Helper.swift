@@ -17,3 +17,9 @@ extension UIFont {
     }
 }
 
+
+enum LayoutConstants {
+    static let headingStackOffset: CGFloat = -20
+    static let leftEdgeOffset: CGFloat = 22
+}
+
