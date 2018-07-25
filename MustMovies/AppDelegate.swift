@@ -17,10 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         window = UIWindow(frame: UIScreen.main.bounds)
         let recommendationVC = RecommendationViewController()
-        recommendationVC.title = "Recommendation"
-        tabBarController = UITabBarController()
-        tabBarController?.viewControllers = [recommendationVC]
-        self.window?.rootViewController = tabBarController
+        self.window?.rootViewController = recommendationVC
         self.window?.makeKeyAndVisible()
         return true
     }

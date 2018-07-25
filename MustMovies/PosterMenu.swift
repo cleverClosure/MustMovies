@@ -40,7 +40,7 @@ class PosterMenu: UIView {
     fileprivate func layoutViews() {
         addSubview(menuStack)
         menuStack.snp.makeConstraints { (make) in
-            make.edges.equalTo(self)
+            make.edges.equalToSuperview()
         }
     }
     
