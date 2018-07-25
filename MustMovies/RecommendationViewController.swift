@@ -244,14 +244,15 @@ extension RecommendationViewController {
     func menuChange(diffY: CGFloat) {
         let maxVal = collectionViewLayout.itemSize.height * 0.4
         let percentage = diffY / maxVal
-        if percentage >= 0.3 {
+        let threshold: CGFloat = 0.3
+        if percentage >= threshold {
             hideHeading()
         }
-        if percentage < 0.3 {
+        if percentage < threshold {
             showHeading()
         }
         switch percentage {
-        case 0...0.4:
+        case 0...threshold:
             headingStack.snp.updateConstraints { (make) in
                 make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset + (100 * percentage))
             }
