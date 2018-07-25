@@ -17,6 +17,7 @@ class PosterMenu: UIView {
     lazy fileprivate var menuStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
+        stack.spacing = 5
         for status in self.items {
             let label = UILabel()
             label.font = UIFont.headingFont()

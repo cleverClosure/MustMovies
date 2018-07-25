@@ -21,7 +21,7 @@ class RecommendationMovieCell: UICollectionViewCell {
     lazy var poster: UIImageView = {
         let view = UIImageView()
         view.image = #imageLiteral(resourceName: "thedouble")
-        view.layer.cornerRadius = self.frame.width / 50
+        view.layer.cornerRadius = 5
         view.layer.masksToBounds = true
         view.contentMode = .scaleAspectFill
         return view
@@ -53,7 +53,7 @@ class RecommendationMovieCell: UICollectionViewCell {
             make.edges.equalToSuperview()
         }
         subtitleLabel.snp.makeConstraints { (make) in
-            make.top.equalTo(self.snp.bottom)
+            make.top.equalTo(self.snp.bottom).offset(13)
             make.leading.equalToSuperview()
             make.width.equalToSuperview()
         }

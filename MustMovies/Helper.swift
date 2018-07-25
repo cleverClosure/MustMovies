@@ -10,16 +10,16 @@ import UIKit
 
 extension UIFont {
     static func headingFont() -> UIFont {
-        return UIFont.systemFont(ofSize: 30, weight: UIFont.Weight.bold)
+        return UIFont(name: "SFProDisplay-Bold", size: 27) ?? UIFont.systemFont(ofSize: 27, weight: UIFont.Weight.bold)
     }
     static func subTitleFont() -> UIFont {
-        return UIFont.systemFont(ofSize: 20, weight: UIFont.Weight.medium)
+        return UIFont(name: "SFProDisplay-Bold", size: 15) ?? UIFont.systemFont(ofSize: 15, weight: UIFont.Weight.bold)
     }
 }
 
 
-enum LayoutConstants {
-    static let headingStackOffset: CGFloat = -20
-    static let leftEdgeOffset: CGFloat = 22
+enum Constants {
+    static let headingStackOffset: CGFloat = -12
+    static let leftEdgeOffset: CGFloat = 25
+    static let panRangeMultiplier: CGFloat = 0.45
 }
-

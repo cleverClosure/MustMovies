@@ -11,7 +11,7 @@ import SnapKit
 
 class RecommendationViewController: UIViewController {
     
-    var viewModel: RecommendationViewViewModel? {
+    var movies: [Movie]? {
         didSet {
             collectionView.reloadData()
         }
@@ -36,6 +36,7 @@ class RecommendationViewController: UIViewController {
     lazy fileprivate var headingStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
+        stack.spacing = 5
         stack.isHidden = false
         stack.addArrangedSubview(heading)
         stack.addArrangedSubview(subHeading)
@@ -59,7 +60,7 @@ class RecommendationViewController: UIViewController {
         return UIEdgeInsets(top: 0, left: 25, bottom: 0, right: view.frame.width - cellSize.width - minimumLineSpacing)
     }
     
-    var minimumLineSpacing: CGFloat = LayoutConstants.leftEdgeOffset
+    var minimumLineSpacing: CGFloat = 20
     
     lazy var collectionViewLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -103,8 +104,8 @@ class RecommendationViewController: UIViewController {
             make.centerY.equalToSuperview()
         }
         headingStack.snp.makeConstraints { (maker) in
-            maker.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
-            maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
+            maker.bottom.equalTo(collectionView.snp.top).offset(Constants.headingStackOffset)
+            maker.leading.equalToSuperview().offset(Constants.leftEdgeOffset)
         }
         
         menu.snp.makeConstraints { (maker) in
@@ -113,14 +114,13 @@ class RecommendationViewController: UIViewController {
         }
     }
     
-    
     fileprivate func fetchMovies() {
         let movies = [Movie(posterFilename:"bladerunner",subtitle:"Based on your rate for interstellar", watchedStatus: nil),
                       Movie(posterFilename:"t2",subtitle:"Based on novel", watchedStatus: nil),
                       Movie(posterFilename:"thedouble",subtitle:"Based on your preferences", watchedStatus: nil),
                       Movie(posterFilename:"thedouble",subtitle:"Based on your preferences", watchedStatus: nil),
-                      Movie(posterFilename:"thedouble",subtitle:"Based on your preferences", watchedStatus: nil)]
-        viewModel = RecommendationViewViewModel(recommendations: movies)
+                      ]
+        self.movies = movies
     }
 
 }
@@ -144,16 +144,16 @@ extension RecommendationViewController: UIScrollViewDelegate {
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        
+
         let layout = self.collectionViewLayout
         let cellWidthIncludingSpacing = layout.itemSize.width + layout.minimumLineSpacing
         var offset = targetContentOffset.pointee
         let index = (offset.x + scrollView.contentInset.left) / cellWidthIncludingSpacing
-        
+
         let roundedIndex = round(index)
-        
+
         currentCellIndex = Int(roundedIndex)
-        
+
         offset = CGPoint(x: roundedIndex * cellWidthIncludingSpacing - scrollView.contentInset.left, y: -scrollView.contentInset.top)
         targetContentOffset.pointee = offset
     }
@@ -172,22 +172,24 @@ extension RecommendationViewController: UIScrollViewDelegate {
 extension RecommendationViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        guard let viewModel = viewModel else { return 0 }
-        return viewModel.numberOfRecommendations()
+        guard let movies = movies else { return 0 }
+        return movies.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RecommendationMovieCell.ID, for: indexPath) as! RecommendationMovieCell
-        cell.subtitleLabel.text = viewModel?.recommedationSubtitle(for: indexPath.item)
-        if let filename = viewModel?.recommedationPosterFilename(for: indexPath.item) {
+        if let movies = movies {
+            let movie = movies[indexPath.item]
+            cell.subtitleLabel.text = movie.subtitle
+            let filename = movie.posterFilename
             cell.poster.image = UIImage(named: filename)
-        }
-        
-        if cell.gestureRecognizers == nil || cell.gestureRecognizers!.count == 0 {
-            let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(recognizer:)))
-            pan.delegate = self
-            pan.isEnabled = indexPath.item == 0 ? true : false
-            cell.addGestureRecognizer(pan)
+            
+            if cell.gestureRecognizers == nil || cell.gestureRecognizers!.count == 0 {
+                let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(recognizer:)))
+                pan.delegate = self
+                pan.isEnabled = indexPath.item == 0 ? true : false
+                cell.addGestureRecognizer(pan)
+            }
         }
         
         return cell
@@ -206,14 +208,14 @@ extension RecommendationViewController {
         case .changed:
             let translation = recognizer.translation(in: self.view)
             if let view = recognizer.view {
-                var changeY = view.center.y + translation.y
+                var changeY = posterCell.center.y + translation.y
                 var diffY = changeY - cellCenter!.y
                 
-                if diffY > view.frame.height * 0.4 || diffY <= 0{
-                    changeY = view.center.y
-                    diffY = view.center.y - cellCenter!.y
+                if diffY > posterCell.frame.height * Constants.panRangeMultiplier || diffY <= 0 {
+                    changeY = posterCell.center.y
+                    diffY = posterCell.center.y - cellCenter!.y
                 }
-                view.center = CGPoint(x:view.center.x, y:changeY)
+                view.center = CGPoint(x:posterCell.center.x, y:changeY)
                 menuChange(diffY: diffY)
             }
             
@@ -228,10 +230,11 @@ extension RecommendationViewController {
     }
     
     func animateHeadingUp() {
-        headingStack.snp.updateConstraints { (make) in
-            make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
-        }
+        
         animate {
+            self.headingStack.snp.updateConstraints { (make) in
+                make.bottom.equalTo(self.collectionView.snp.top).offset(Constants.headingStackOffset)
+            }
             self.view.layoutIfNeeded()
         }
     }
@@ -243,16 +246,17 @@ extension RecommendationViewController {
     }
     
     func animate(animations: @escaping ()->()) {
-        UIView.animate(withDuration: 0.6, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0, options: .curveEaseInOut, animations: { [unowned self] in
-                animations()
-            }, completion: nil)
+        let animation = UIViewPropertyAnimator(duration: 0.6, dampingRatio: 0.7) {
+            animations()
+        }
+        animation.startAnimation()
     }
     
-    
     func menuChange(diffY: CGFloat) {
-        let maxVal = collectionViewLayout.itemSize.height * 0.4
+        let threshold: CGFloat = 0.38
+        let maxVal = collectionViewLayout.itemSize.height * Constants.panRangeMultiplier
+        
         let percentage = diffY / maxVal
-        let threshold: CGFloat = 0.3
         if percentage >= threshold {
             hideHeading()
         }
@@ -262,10 +266,10 @@ extension RecommendationViewController {
         switch percentage {
         case 0...threshold:
             headingStack.snp.updateConstraints { (make) in
-                make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset + (100 * percentage))
+                make.bottom.equalTo(collectionView.snp.top).offset(Constants.headingStackOffset + (100 * percentage))
             }
         default:
-            var index = Int(round((percentage / (CGFloat(WatchedStatus.allValues.count) / CGFloat(10))))) - 1
+            var index = Int(round((percentage / CGFloat(WatchedStatus.allValues.count)) * CGFloat(10))) - 1
             index = max(index, 0)
             index = min(index, menu.items.count)
             menu.chooseItem(at: index)
