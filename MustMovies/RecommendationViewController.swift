@@ -42,7 +42,7 @@ class RecommendationViewController: UIViewController {
         return stack
     }()
     
-    lazy fileprivate var menuStack: PosterMenu = {
+    lazy fileprivate var menu: PosterMenu = {
         let items = WatchedStatus.allValues.map {$0.rawValue}
         let menu = PosterMenu(items: items)
         menu.isHidden = true
@@ -70,12 +70,10 @@ class RecommendationViewController: UIViewController {
         return layout
     }()
     
-    
     var currentCellIndex: Int = 0
     
     var cellCenter: CGPoint?
-    var shouldRecognizeSimultaneously = true
-
+    
     lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: CGRect.zero, collectionViewLayout: collectionViewLayout)
         collectionView.backgroundColor = .white
@@ -92,14 +90,9 @@ class RecommendationViewController: UIViewController {
         view.addSubview(collectionView)
         collectionView.register(RecommendationMovieCell.self, forCellWithReuseIdentifier: RecommendationMovieCell.ID)
         view.addSubview(headingStack)
-        view.addSubview(menuStack)
+        view.addSubview(menu)
         view.backgroundColor = .white
         layoutViews()
-    }
-   
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        collectionView.decelerationRate = UIScrollViewDecelerationRateFast
     }
     
     fileprivate func layoutViews() {
@@ -114,7 +107,7 @@ class RecommendationViewController: UIViewController {
             maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
         }
         
-        menuStack.snp.makeConstraints { (maker) in
+        menu.snp.makeConstraints { (maker) in
             maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
             maker.top.equalTo(headingStack)
         }
@@ -167,12 +160,12 @@ extension RecommendationViewController: UIScrollViewDelegate {
     
     func hideHeading() {
         headingStack.isHidden = true
-        menuStack.isHidden = false
+        menu.isHidden = false
     }
     
     func showHeading() {
         headingStack.isHidden = false
-        menuStack.isHidden = true
+        menu.isHidden = true
     }
 }
 
@@ -206,10 +199,8 @@ extension RecommendationViewController {
     
         switch recognizer.state {
         case .began:
-            shouldRecognizeSimultaneously = false
             cellCenter = recognizer.view!.center
         case .changed:
-            
             let translation = recognizer.translation(in: self.view)
             if let view = recognizer.view {
                 var changeY = view.center.y + translation.y
@@ -220,26 +211,40 @@ extension RecommendationViewController {
                     diffY = view.center.y - cellCenter!.y
                 }
                 view.center = CGPoint(x:view.center.x, y:changeY)
-                
                 menuChange(diffY: diffY)
             }
             
             recognizer.setTranslation(CGPoint.zero, in: self.view)
         case .ended:
-            shouldRecognizeSimultaneously = true
             showHeading()
-            headingStack.snp.updateConstraints { (make) in
-                make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
-            }
-            UIView.animate(withDuration: 0.6, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0, options: .curveEaseInOut, animations: { [unowned self] in
-                recognizer.view!.center = self.cellCenter ?? CGPoint.zero
-                self.view.layoutIfNeeded()
-            }, completion: nil)
-            
+            animateHeadingUp()
+            animatePosterUp(view: recognizer.view!)
         default:
             print("default")
         }
     }
+    
+    func animateHeadingUp() {
+        headingStack.snp.updateConstraints { (make) in
+            make.bottom.equalTo(collectionView.snp.top).offset(LayoutConstants.headingStackOffset)
+        }
+        animate {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    func animatePosterUp(view: UIView) {
+        animate {
+            view.center = self.cellCenter ?? CGPoint.zero
+        }
+    }
+    
+    func animate(animations: @escaping ()->()) {
+        UIView.animate(withDuration: 0.6, delay: 0.0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0, options: .curveEaseInOut, animations: { [unowned self] in
+                animations()
+            }, completion: nil)
+    }
+    
     
     func menuChange(diffY: CGFloat) {
         let maxVal = collectionViewLayout.itemSize.height * 0.4
@@ -259,8 +264,8 @@ extension RecommendationViewController {
         default:
             var index = Int(round((percentage / (CGFloat(WatchedStatus.allValues.count) / CGFloat(10))))) - 1
             index = max(index, 0)
-            index = min(index, menuStack.items.count)
-            menuStack.chooseItem(at: index)
+            index = min(index, menu.items.count)
+            menu.chooseItem(at: index)
         }
     }
     
