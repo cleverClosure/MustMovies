@@ -178,8 +178,11 @@ extension RecommendationViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RecommendationMovieCell.ID, for: indexPath) as! RecommendationMovieCell
-        cell.subtitleLabel.text = viewModel!.recommedationSubtitle(for: indexPath.item)
-        cell.poster.image = UIImage(named: viewModel!.recommedationPosterFilename(for: indexPath.item)!)
+        cell.subtitleLabel.text = viewModel?.recommedationSubtitle(for: indexPath.item)
+        if let filename = viewModel?.recommedationPosterFilename(for: indexPath.item) {
+            cell.poster.image = UIImage(named: filename)
+        }
+        
         if cell.gestureRecognizers == nil || cell.gestureRecognizers!.count == 0 {
             let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(recognizer:)))
             pan.delegate = self
@@ -188,7 +191,6 @@ extension RecommendationViewController: UICollectionViewDataSource {
             cell.addGestureRecognizer(pan)
         }
         
-        
         return cell
     }
 }
@@ -196,10 +198,12 @@ extension RecommendationViewController: UICollectionViewDataSource {
 extension RecommendationViewController {
 
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
-    
+        guard let posterCell = recognizer.view else {
+            return
+        }
         switch recognizer.state {
         case .began:
-            cellCenter = recognizer.view!.center
+            cellCenter = recognizer.view?.center
         case .changed:
             let translation = recognizer.translation(in: self.view)
             if let view = recognizer.view {
@@ -218,7 +222,7 @@ extension RecommendationViewController {
         case .ended:
             showHeading()
             animateHeadingUp()
-            animatePosterUp(view: recognizer.view!)
+            animatePosterUp(view: posterCell)
         default:
             print("default")
         }

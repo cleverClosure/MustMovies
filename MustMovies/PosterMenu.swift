@@ -48,10 +48,12 @@ class PosterMenu: UIView {
         guard 0..<items.count ~= index  else {
             return
         }
-        (menuStack.arrangedSubviews as! [UILabel]).forEach {
-            $0.textColor = .gray
+        menuStack.arrangedSubviews.forEach {
+            let label = ($0 as? UILabel)
+            label?.textColor = .gray
         }
-        (menuStack.arrangedSubviews[index] as! UILabel).textColor = .black
+        let labelToHighlight = (menuStack.arrangedSubviews[index] as? UILabel)
+        labelToHighlight?.textColor = .black
     }
 }
 

@@ -40,7 +40,6 @@ class RecommendationMovieCell: UICollectionViewCell {
         super.init(frame: frame)
         contentView.addSubview(innerView)
         innerView.addSubview(poster)
-        
         innerView.addSubview(subtitleLabel)
         layoutViews()
     }
@@ -50,17 +49,14 @@ class RecommendationMovieCell: UICollectionViewCell {
     }
     
     fileprivate func layoutViews() {
-        
         innerView.snp.makeConstraints { (make) in
             make.edges.equalToSuperview()
         }
-        
         subtitleLabel.snp.makeConstraints { (make) in
             make.top.equalTo(self.snp.bottom)
             make.leading.equalToSuperview()
             make.width.equalToSuperview()
         }
-        
         poster.snp.makeConstraints { (make) in
             make.edges.equalToSuperview()
         }
