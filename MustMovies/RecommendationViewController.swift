@@ -137,10 +137,10 @@ extension RecommendationViewController: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         collectionView.visibleCells.forEach {
-            $0.gestureRecognizers?.filter { type(of: $0.view) == RecommendationMovieCell.self }.first?.isEnabled = false
+            $0.gestureRecognizers?.filter { type(of: $0) == UIPanGestureRecognizer.self }.first?.isEnabled = false
         }
         let cell = collectionView.cellForItem(at: IndexPath(item: currentCellIndex, section: 0))
-        cell?.gestureRecognizers?.filter { type(of: $0.view) == RecommendationMovieCell.self }.first?.isEnabled = true
+        cell?.gestureRecognizers?.filter { type(of: $0) == UIPanGestureRecognizer.self }.first?.isEnabled = true
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
