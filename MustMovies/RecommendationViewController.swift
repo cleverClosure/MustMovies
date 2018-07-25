@@ -137,10 +137,10 @@ extension RecommendationViewController: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         collectionView.visibleCells.forEach {
-            $0.gestureRecognizers?.filter {$0.name == "pan"}.first?.isEnabled = false
+            $0.gestureRecognizers?.filter { type(of: $0.view) == RecommendationMovieCell.self }.first?.isEnabled = false
         }
         let cell = collectionView.cellForItem(at: IndexPath(item: currentCellIndex, section: 0))
-        cell?.gestureRecognizers?.filter {$0.name == "pan"}.first?.isEnabled = true
+        cell?.gestureRecognizers?.filter { type(of: $0.view) == RecommendationMovieCell.self }.first?.isEnabled = true
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
@@ -187,7 +187,6 @@ extension RecommendationViewController: UICollectionViewDataSource {
             let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(recognizer:)))
             pan.delegate = self
             pan.isEnabled = indexPath.item == 0 ? true : false
-            pan.name = "pan"
             cell.addGestureRecognizer(pan)
         }
         
