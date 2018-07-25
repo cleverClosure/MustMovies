@@ -56,7 +56,7 @@ class RecommendationViewController: UIViewController {
     }
     
     var sectionInset: UIEdgeInsets {
-        return UIEdgeInsets(top: 0, left: 25, bottom: 10, right: view.frame.width - cellSize.width - minimumLineSpacing)
+        return UIEdgeInsets(top: 0, left: 25, bottom: 0, right: view.frame.width - cellSize.width - minimumLineSpacing)
     }
     
     var minimumLineSpacing: CGFloat = LayoutConstants.leftEdgeOffset
@@ -99,7 +99,7 @@ class RecommendationViewController: UIViewController {
         collectionView.snp.makeConstraints { (make) in
             make.leading.equalToSuperview()
             make.trailing.equalToSuperview()
-            make.height.equalToSuperview().multipliedBy(0.6)
+            make.height.equalTo(collectionView.snp.width)
             make.centerY.equalToSuperview()
         }
         headingStack.snp.makeConstraints { (maker) in
@@ -108,7 +108,7 @@ class RecommendationViewController: UIViewController {
         }
         
         menu.snp.makeConstraints { (maker) in
-            maker.leading.equalToSuperview().offset(LayoutConstants.leftEdgeOffset)
+            maker.leading.equalTo(headingStack)
             maker.top.equalTo(headingStack)
         }
     }
@@ -127,7 +127,7 @@ class RecommendationViewController: UIViewController {
 
 extension RecommendationViewController: UICollectionViewDelegateFlowLayout, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = view.frame.width / 1.5
+        let width = collectionView.frame.width / 1.5
         return CGSize(width: width, height: width * 1.5)
     }
     
@@ -137,10 +137,10 @@ extension RecommendationViewController: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         collectionView.visibleCells.forEach {
-            $0.gestureRecognizers?[0].isEnabled = false
+            $0.gestureRecognizers?.filter {$0.name == "pan"}.first?.isEnabled = false
         }
         let cell = collectionView.cellForItem(at: IndexPath(item: currentCellIndex, section: 0))
-        cell?.gestureRecognizers?[0].isEnabled = true
+        cell?.gestureRecognizers?.filter {$0.name == "pan"}.first?.isEnabled = true
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
